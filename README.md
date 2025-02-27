@@ -6,7 +6,15 @@ Co-SemDepth is a lightweight joint deep architecture for monocular depth estimat
 ## Citation
 
 ## Dependencies
+Starting from a fresh Anaconda environment, you can install the required depndencies to run our code with:
+```shell
+conda install -c conda-forge tensorflow-gpu=2.7 numpy pandas
+```
 
+Then, extract the pretrained weights with:
+```shell
+unzip '*.zip'
+```
 ### Datasets
 
 #### Mid-Air [[1](#ref_1)]
