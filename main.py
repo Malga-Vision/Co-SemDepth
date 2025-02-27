@@ -33,7 +33,6 @@ import dataloaders as dl
 from callbacks import *
 from joint_m4depth_network import *
 #from metrics import *
-#from joint_m4depth_network_fullres import *
 import time
 from PIL import Image
 
@@ -83,14 +82,11 @@ if __name__ == '__main__':
         data = chosen_dataloader.dataset
         
         
-        #val_dataloader.get_dataset("valid", model_opts.dataloader_settings, batch_size=cmd.batch_size)
-        #val_data = val_dataloader.dataset
-        
         model = JointM4DepthSemantic(nbre_levels=nbre_levels,
                         ablation_settings=model_opts.ablation_settings,
                         is_training=True, num_classes = chosen_dataloader.class_count)
         print("TRAIN Length of the dataset = ", chosen_dataloader.length)
-        #print("VALID Length of the dataset = ", val_dataloader.length)
+        
         # Initialize callbacks
         tensorboard_cbk = keras.callbacks.TensorBoard(
             log_dir=cmd.log_dir, histogram_freq=1200, write_graph=True,
@@ -98,13 +94,8 @@ if __name__ == '__main__':
             profile_batch=0, embeddings_freq=0, embeddings_metadata=None)
         model_checkpoint_cbk = CustomCheckpointCallback(os.path.join(ckpt_dir,"train"), resume_training=True)
         
-        #lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=0.0001, decay_steps=50000, decay_rate=0.5)
-        #opt = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-        opt = tf.keras.optimizers.Adam(learning_rate=0.0001)
-
         
-        #model.compile(optimizer=opt, metrics=[tf.keras.metrics.MeanIoU(num_classes = chosen_dataloader.class_count)], run_eagerly = True)
-        #model.compile(optimizer=opt, metrics=[RootMeanSquaredLogError(), tf.keras.metrics.MeanIoU(num_classes = chosen_dataloader.class_count)])
+        opt = tf.keras.optimizers.Adam(learning_rate=0.0001)
         model.compile(optimizer=opt)
         
         print("Length of the dataset = ", chosen_dataloader.length)
@@ -115,15 +106,12 @@ if __name__ == '__main__':
 
         # Adapt number of steps depending on desired usecase
         if cmd.mode == 'finetune':
-            nbre_epochs = model_checkpoint_cbk.resume_epoch + (40000 // chosen_dataloader.length)
+            nbre_epochs = model_checkpoint_cbk.resume_epoch + 10
         else:
-            #nbre_epochs = (350000 // chosen_dataloader.length)
-            nbre_epochs = (0 // chosen_dataloader.length)
+            nbre_epochs = 60
 
-        #model.fit(data, epochs= nbre_epochs + 1,
-        #          initial_epoch=model_checkpoint_cbk.resume_epoch,
-        #          callbacks=[tensorboard_cbk, model_checkpoint_cbk] + val_cbk, validation_data = val_data, validation_freq= 2)
-        model.fit(data, epochs= nbre_epochs + 1,
+        
+        model.fit(data, epochs= nbre_epochs,
                   initial_epoch=model_checkpoint_cbk.resume_epoch,
                   callbacks=[tensorboard_cbk, model_checkpoint_cbk] + val_cbk)
         
@@ -144,28 +132,12 @@ if __name__ == '__main__':
 
         model = JointM4DepthSemantic(nbre_levels=nbre_levels, ablation_settings=model_opts.ablation_settings, num_classes = chosen_dataloader.class_count)
         print("Got the Model")
-        #model_checkpoint_cbk = CustomCheckpointCallback(weights_dir, resume_training=True)
-        model_checkpoint_cbk = CustomCheckpointCallback(weights_dir)
-        #model.compile(metrics=[AbsRelError(),
-                               #SqRelError(),
-                               #RootMeanSquaredError(),
-                               #RootMeanSquaredLogError(),
-                               #ThresholdRelError(1), ThresholdRelError(2), ThresholdRelError(3)])
-                               
         
-        '''
-        model.compile(metrics = [[AbsRelError(),
-                               SqRelError(),
-                               RootMeanSquaredError(),
-                               RootMeanSquaredLogError(),
-                               ThresholdRelError(1), ThresholdRelError(2), ThresholdRelError(3)],[tf.keras.metrics.MeanIoU(num_classes = chosen_dataloader.class_count)]])
-        '''
+        model_checkpoint_cbk = CustomCheckpointCallback(weights_dir)
+        
         model.compile()
-        start = time.time()
         print("Compiled the Model")
         metrics = model.evaluate(data, callbacks=[model_checkpoint_cbk])
-        end = time.time()
-        print("EXECUTION TIME = ", end-start)
         print("METRICS: ",metrics)
         # Keep track of the computed performance
         if cmd.mode == 'validation':
@@ -179,16 +151,9 @@ if __name__ == '__main__':
             with open(os.path.join(*[ckpt_dir, "validation-perfs.txt"]), 'a') as file:
                 file.write(string + '\n')
         else:
-            #np.savetxt(os.path.join(*[ckpt_dir, "perfs-" + cmd.dataset + ".txt"]), metrics, fmt='%.18e', delimiter='\t',
-                       #newline='\n')
             np.savetxt(os.path.join(*[ckpt_dir, "perfs-" + cmd.dataset + ".txt"]), metrics, delimiter='\t',
                        newline='\n')
-            #print("no saving")
-            #f = open(os.path.join(*[ckpt_dir, "perfs-" + cmd.dataset + ".txt"]))
-            #f.write(metrics)
-            #f.close
-            #np.savetxt(os.path.join(*[ckpt_dir, "perfs-" + cmd.dataset + ".txt"]), metrics, fmt='%.18e', delimiter='\t',
-                       #newline='\n')
+            
 
     elif cmd.mode == "predict":
         chosen_dataloader.get_dataset("predict", model_opts.dataloader_settings, batch_size=1)
@@ -208,7 +173,6 @@ if __name__ == '__main__':
         
         class_index = chosen_dataloader.class_index
         start = time.time()
-        #print("START TIME!!!!!!")
         # Do what you want with the outputs
         for i, sample in enumerate(data):
             #print(i)
@@ -218,33 +182,33 @@ if __name__ == '__main__':
             is_first_run = False
 
             est = model([[sample], sample["camera"]]) # Run network to get estimates
-            '''
-            #d_est = est["depth"][0, :, :, :]        # Estimate : [h,w,1] matrix with depth in meter
-            #d_gt = sample['depth'][0, :, :, :]      # Ground truth : [h,w,1] matrix with depth in meter
+            
+            d_est = est["depth"][0, :, :, :]        # Estimate : [h,w,1] matrix with depth in meter
+            d_gt = sample['depth'][0, :, :, :]      # Ground truth : [h,w,1] matrix with depth in meter
             s_est = est["semantic"][0, :, :, :]        # Estimate : [h,w,1] matrix with depth in meter
             seg_est = tf.math.argmax(s_est, 2)
             seg_gt = sample['semantic'][0, :, :, :]      # Ground truth : [h,w,1] matrix with depth in meter
-            #i_rgb = sample['RGB_im'][0, :, :, :]    # RGB image : [h,w,3] matrix with rgb channels ranging between 0 and 1
+            i_rgb = sample['RGB_im'][0, :, :, :]    # RGB image : [h,w,3] matrix with rgb channels ranging between 0 and 1
             
-            #d_est = np.array(d_est)
-            #d_gt = np.array(d_gt)
+            d_est = np.array(d_est)
+            d_gt = np.array(d_gt)
             seg_est = np.array(seg_est)
             seg_gt = np.array(seg_gt)
-            #i_rgb = np.array(i_rgb)
+            i_rgb = np.array(i_rgb)
             
-            '''
-            #d_gt[ d_gt > 255] = 255
-            #d_gt[ d_gt < 0] = 0
-            #d_est[ d_est > 255] = 255
-            #d_est[ d_est < 0] = 0
-            #d_est_rgb = np.squeeze(d_est, axis=2).astype(np.uint8)
-            #d_gt_rgb = np.squeeze(d_gt, axis=2).astype(np.uint8)
-            #im = Image.fromarray(d_est_rgb)
-            #im.save("/media/DATA_4TB/Yara/results/depth_estimation/depth_"+str(i)+".png")
-            #im = Image.fromarray(d_gt_rgb)
-            #im.save("/media/DATA_4TB/Yara/results/gt_depth/depth_"+str(i)+".png")
             
-            '''
+            d_gt[ d_gt > 255] = 255
+            d_gt[ d_gt < 0] = 0
+            d_est[ d_est > 255] = 255
+            d_est[ d_est < 0] = 0
+            d_est_rgb = np.squeeze(d_est, axis=2).astype(np.uint8)
+            d_gt_rgb = np.squeeze(d_gt, axis=2).astype(np.uint8)
+            im = Image.fromarray(d_est_rgb)
+            im.save("/media/DATA_4TB/Yara/results/depth_estimation/depth_"+str(i)+".png")
+            im = Image.fromarray(d_gt_rgb)
+            im.save("/media/DATA_4TB/Yara/results/gt_depth/depth_"+str(i)+".png")
+            
+            
             seg_est = np.expand_dims(seg_est, axis = 2)
             x1 = np.copy(seg_est)
             x2 = np.copy(seg_est)
@@ -260,12 +224,8 @@ if __name__ == '__main__':
             img_seg = np.append(img_seg,x3, axis = 2)
             
             im = Image.fromarray(img_seg.astype(np.uint8))
-            '''
-            '''
-            im = Image.fromarray(seg_est.astype(np.uint8))
             im.save("/media/DATA_4TB/Yara/results/seg_estimation/sem_"+str(i)+".png")
-            '''
-            '''
+            
             x1 = np.copy(seg_gt)
             x2 = np.copy(seg_gt)
             x3 = np.copy(seg_gt)
@@ -278,22 +238,13 @@ if __name__ == '__main__':
             img_seg = np.append(x1,x2, axis = 2)
             img_seg = np.append(img_seg,x3, axis = 2)
             
-            #print(img_seg)
-            #print(np.shape(img_seg))
             im = Image.fromarray(img_seg.astype(np.uint8))
-            '''
-            '''
-            seg_gt = np.squeeze(seg_gt)
-            im = Image.fromarray(seg_gt.astype(np.uint8))
             im.save("/media/DATA_4TB/Yara/results/gt_sem/sem_"+str(i)+".png")
-            '''
-            '''
+            
             i_rgb_rgb =  ( i_rgb  * 255.0).astype(np.uint8)
             im = Image.fromarray(i_rgb_rgb)
             im.save("/media/DATA_4TB/Yara/results/images/img_"+str(i)+".png")
             
-            '''
 
         end = time.time()
-        print("END TIME!!!!!!")
-        print(end-start)
+        print("EXECUTION TIME = ", end-start)
