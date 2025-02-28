@@ -36,9 +36,16 @@ python scripts/map_classes_midair.py path/to/input/semantic_folder/location path
 ## Reproducing paper results
 
 ### Training from scratch
+To train on MidAir:
+```shell
+bash  scripts/1a-train-midair.sh path/to/desired/weights/location
+```
 
 ### Evaluation and Pretrained weights
-
+To evaluate on MidAir:
+```shell
+bash  scripts/2-evaluate.sh midair path/to/weights/location
+```
 ### Other operations
 
 ### Processing outputs
