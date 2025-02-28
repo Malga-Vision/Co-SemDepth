@@ -11,10 +11,6 @@ Starting from a fresh Anaconda environment, you can install the required depnden
 conda install -c conda-forge tensorflow-gpu=2.7 numpy pandas
 ```
 
-Then, extract the pretrained weights with:
-```shell
-unzip '*.zip'
-```
 ### Datasets
 
 #### Mid-Air [[1](#ref_1)]
