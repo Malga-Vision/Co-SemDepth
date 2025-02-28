@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from collections import namedtuple
 
-DataloaderParameters = namedtuple('DataloaderParameters', ('db_path_config', 'records_path', 'db_seq_len', 'seq_len', 'augment', 'val_records_path'))
+DataloaderParameters = namedtuple('DataloaderParameters', ('db_path_config', 'records_path', 'db_seq_len', 'seq_len', 'augment'))
 
 class DataLoaderGeneric():
     """Superclass for other dataset dataloaders
@@ -61,10 +61,7 @@ class DataLoaderGeneric():
             self._set_output_size(out_size=out_size)
 
         self.settings = settings
-        if usecase == "valid":
-            self.records_path = settings.val_records_path
-        else:
-            self.records_path = settings.records_path
+        self.records_path = settings.records_path
         self.db_path = settings.db_path_config[self.db_name]
         self.db_seq_len = self.settings.db_seq_len
         self.seq_len = self.settings.seq_len

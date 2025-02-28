@@ -47,5 +47,7 @@ python scripts/map_classes_midair.py path/to/input/semantic_folder/location path
 
 ## Baseline methods performance reproduction
 
+## Training on MidAir+TopAir
+
 ## License
 

@@ -147,7 +147,7 @@ class CustomMidairValidationCallback(ks.callbacks.Callback):
                                               '--dataset="midair" ' \
                                               '--db_path_config=%s ' \
                                               '--ckpt_dir=%s ' \
-                                              '--records_path=%s ' % (self.cmd.db_path_config, self.cmd.ckpt_dir, os.path.join(rel_path,"data/midair/val_data_v1"))
+                                              '--records_path=%s ' % (self.cmd.db_path_config, self.cmd.ckpt_dir, os.path.join(rel_path,"data/midair/val_data"))
         opt_args = ''
         forbidden_args = ['mode', 'dataset', 'db_path_config', 'ckpt_dir', 'records_path', 'arch_depth', 'seq_len', 'db_seq_len']
         for key, value in self.cmd.__dict__.items():

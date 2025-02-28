@@ -1,11 +1,5 @@
 {
   "_comment": "relative paths should be written relative to this file",
   "midair" : "./datasets/MidAir",
-  "kitti-raw": "./datasets/Kitti",
-  "tartanair": "./datasets/TartanAir",
-  "wilduav": "/media/DATA_4TB/Yara/wildUAV/",
-  "uzh": "/media/DATA_4TB/Yara/UZH/",
-  "topair": "/media/DATA_4TB/Yara/TopAir/",
-  "airsim": "/media/DATA_4TB/Yara/AirsimTopView/",
-  "cityscapes": "/media/DATA_4TB/Yara/cityscapes"
+  "topair": "./datasets/TopAir",
 }

@@ -7,30 +7,29 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 
 
-def map_wuav(a):
+def map_midair(a):
     #print(a)
-    if (a == [230,175,127]).all():
+    if (a == [127,175,230]).all():
         return 0
-    elif (a == [185,163,75]).all():
+    elif (a == [75,163,185]).all():
         return 1
-    elif (a == [0,128,50]).all():
+    elif (a == [50,128,0]).all():
         return 2
-    elif (a == [69,58,105]).all():
+    elif (a == [53,94,59]).all():
         return 3
-    elif (a == [59,94,53]).all():
+    elif (a == [237,125,49]).all():
         return 4
-    elif (a == [97,97,117]).all():
+    elif (a == [70,70,70]).all():
         return 5
     elif (a == [128,64,128]).all():
         return 6
-    elif (a == [128,64,64]).all():
-        return 7
     elif (a == [64,64,128]).all():
+        return 7
+    elif (a == [128,64,64]).all():
         return 8
 
 
-#inp_path1 = "/media/DATA_4TB/Yara/results_wuav_joint01/gt_sem"
-#inp_path2 = "/media/DATA_4TB/Yara/results_wuav_joint01/est_sem"
+
 inp_path1 = "/media/DATA_4TB/Yara/results/gt_sem"
 inp_path2 = "/media/DATA_4TB/Yara/results/seg_estimation"
 imgs = os.listdir(inp_path1)
@@ -46,12 +45,11 @@ for im in imgs:
         im1 = cv2.imread(im1_path)
         im2_path = os.path.join(*[inp_path2, im])
         im2 = cv2.imread(im2_path)
-        #im_upd1 = np.apply_along_axis(map_wuav, -1,im1)
-        #im_upd2 = np.apply_along_axis(map_wuav, -1,im2)
-        #actual = np.append(actual,im_upd1.flatten())
-        #predicted = np.append(predicted,im_upd2.flatten())
-        actual = np.append(actual,im1[:,:,0].flatten())
-        predicted = np.append(predicted,im2[:,:,0].flatten())
+        im_upd1 = np.apply_along_axis(map_midair, -1,im1)
+        im_upd2 = np.apply_along_axis(map_midair, -1,im2)
+        actual = np.append(actual,im_upd1.flatten())
+        predicted = np.append(predicted,im_upd2.flatten())
+        
     idx = idx+1
     
     

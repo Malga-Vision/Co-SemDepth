@@ -10,8 +10,8 @@ class M4DepthOptions:
         # Global Options
         args.add_argument('--dataset',
                           default="",
-                          choices=['midair', 'tartanair', 'kitti-raw','wilduav', 'uzh', 'airsim', 'cityscapes'],
-                          help="""Dataset to use (midair, tartanair, kitti-raw, wilduav, uzh, airsim, or cityscapes)""")
+                          choices=['midair', 'topair'],
+                          help="""Dataset to use (midair, topair)""")
         args.add_argument('--ckpt_dir',
                           default="ckpt",
                           help="""Model checkpoint directory""")
@@ -32,9 +32,6 @@ class M4DepthOptions:
         args.add_argument('--records_path',
                           default=None, type=str,
                           help="""csv files to use when loading dataset""")
-        args.add_argument('--val_records_path',
-                          default=None, type=str,
-                          help="""csv files to use when loading validation dataset""")
         args.add_argument('--db_seq_len',
                           default=None, type=int,
                           help="""Dataset sequence length (frames) [Mandatory for training!]""")
@@ -102,4 +99,4 @@ class M4DepthOptions:
                                                            not cmd.no_level_memory)
 
         self.dataloader_settings =  DataloaderParameters(json_data, cmd.records_path, cmd.db_seq_len,
-                                                         cmd.seq_len, not cmd.no_augmentation, cmd.val_records_path)
+                                                         cmd.seq_len, not cmd.no_augmentation)
