@@ -31,7 +31,7 @@ bash  scripts/0a-get_midair.sh path/to/desired/dataset/location path/to/download
 
 Apply the semantic classes mapping on MidAir by running the following script:
 ```shell
-python scripts/data_class_mapping.py path/to/input/semantic_folder/location path/to/output/semantic_folder/location
+python scripts/data_class_mapping.py
 ```
 ## Reproducing paper results
 
