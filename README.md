@@ -42,7 +42,7 @@ bash  scripts/1a-train-midair.sh path/to/desired/weights/location
 ```
 
 ### Evaluation and Pretrained weights
-The pre'trained weights can be downloaded from ![here](https://drive.google.com/file/d/1C8uqqsv8sXYF15QvdLfw3G2S8JZ5vmQf/view?usp=sharing) and extracted
+The pre'trained weights can be downloaded from [here](https://drive.google.com/file/d/1C8uqqsv8sXYF15QvdLfw3G2S8JZ5vmQf/view?usp=sharing) and extracted
 
 To evaluate on MidAir:
 ```shell
@@ -57,6 +57,12 @@ bash  scripts/2-evaluate.sh midair path/to/weights/location
 ## Baseline methods performance reproduction
 
 ## Training on MidAir+TopAir
-TopAir dataset can be downloaded from ![here](https://huggingface.co/datasets/yaraalaa0/TopAir)
+TopAir dataset can be downloaded from [here](https://huggingface.co/datasets/yaraalaa0/TopAir). Then you need to specify its path in the file [datasets_location.json](https://github.com/Malga-Vision/Co-SemDepth/blob/main/datasets_location.json)
+
+To train on MidAir and TopAir datasets together, run:
+```shell
+python joint_train.py --mode=train --seq_len=4 --db_seq_len=4 --arch_depth=5 --ckpt_dir="path/to/weights/location/" --log_dir="path/to/weights/location/summaries" --records_path=data/ --val_records_path=data/
+```
+
 ## License
 
