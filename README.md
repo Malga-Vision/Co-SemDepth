@@ -61,6 +61,19 @@ To train on MidAir and TopAir datasets together, run:
 ```shell
 python joint_train.py --mode=train --seq_len=4 --db_seq_len=4 --arch_depth=5 --ckpt_dir="path/to/weights/location/" --log_dir="path/to/weights/location/summaries" --records_path=data/ --val_records_path=data/
 ```
+## References
 
+<a name="ref_1"></a>
+
+```
+[1]
+@inproceedings{Fonder2019MidAir,
+  author    = {Fonder, Michael and Van Droogenbroeck, Marc},
+  title     = {Mid-Air: A multi-modal dataset for extremely low altitude drone flights},
+  booktitle = {IEEE International Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)},
+  year      = {2019},
+  month     = {June}
+}
+```
 ## License
 
