@@ -40,7 +40,7 @@ bash  scripts/1a-train-midair.sh path/to/desired/weights/location
 ```
 
 ### Evaluation and Pretrained weights
-The pre-trained weights can be downloaded from [here](https://drive.google.com/file/d/1N5Av4b_eVzGohn0OmgRhWlpN1YuIVcb9/view?usp=sharing) and extracted
+The pre-trained weights can be downloaded from [here](https://drive.google.com/file/d/1N5Av4b_eVzGohn0OmgRhWlpN1YuIVcb9/view?usp=sharing) and extracted inside the weights folder.
 
 To evaluate on MidAir:
 ```shell
