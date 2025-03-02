@@ -3,6 +3,8 @@ Official implementation for the joint network presented in the paper "Co-SemDept
 ![alt text](https://github.com/Malga-Vision/Co-SemDepth/blob/main/joint_arch.png?raw=true)
 ## Overview
 Co-SemDepth is a lightweight joint deep architecture for monocular depth estimation and semantic segmentation given an input of image sequences captured in outdoor environments by a camera moving with 6 degrees of freedom (6 DoF). 
+
+Please refer to these repositories for the single [M4Depth](https://github.com/michael-fonder/M4Depth) and [M4Semantic](https://github.com/Malga-Vision/M4Semantic) architectures.
 ## Citation
 
 ## Dependencies
