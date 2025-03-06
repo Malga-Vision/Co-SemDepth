@@ -8,9 +8,14 @@ Please refer to these repositories for the single [M4Depth](https://github.com/m
 ## Citation
 
 ## Dependencies
-Starting from a fresh Anaconda environment, you can install the required depndencies to run our code with:
+Starting from a fresh Anaconda environment with python=3.8, you need first to install tensorflow 2.7:
 ```shell
-conda install -c conda-forge tensorflow-gpu=2.7 numpy pandas
+pip install tensorflow-gpu==2.7.1
+```
+
+Then, install the other required librarires:
+```shell
+pip install pandas pillow
 ```
 
 ### Datasets
