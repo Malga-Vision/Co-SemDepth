@@ -31,7 +31,7 @@ from tensorflow import keras
 import numpy as np
 import dataloaders as dl
 from callbacks import *
-from joint_m4depth_network import *
+from cosemdepth_network import *
 #from metrics import *
 import time
 from PIL import Image
