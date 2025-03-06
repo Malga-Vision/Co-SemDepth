@@ -1,5 +1,5 @@
 {
   "_comment": "relative paths should be written relative to this file",
   "midair" : "./datasets/MidAir",
-  "topair": "./datasets/TopAir",
+  "topair": "./datasets/TopAir"
 }

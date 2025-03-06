@@ -39,5 +39,6 @@ for set in data:
                 inp_path = os.path.join(*[db_path, set, climate, 'segmentation', traj, img])
                 #print("Img: ", inp_path)
                 img_cv = cv2.imread(inp_path)
-                img_upd = np.vectorize(midair_class.get)(img_cv)
+                img_s = cv2.resize(img_cv, (384,384), interpolation= cv2.INTER_NEAREST)
+                img_upd = np.vectorize(midair_class.get)(img_s)
                 cv2.imwrite(inp_path, img_upd)

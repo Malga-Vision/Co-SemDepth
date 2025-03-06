@@ -218,27 +218,27 @@ class DepthEstimatorLevel(ks.layers.Layer):
     def call(self, curr_f_maps, prev_l_est, rot, trans, camera, new_traj, prev_f_maps=None, prev_t_depth=None):
         with tf.name_scope("DepthEstimator_lvl"):
             b, h, w, c = self.shape
-            print("DEPTH ESTIMATOR LEVEL SHAPE = ", [b,h,w,c])
+            #print("DEPTH ESTIMATOR LEVEL SHAPE = ", [b,h,w,c])
             # Disable feature vector subdivision if required
             if self.ablation.subdivide_features:
                 nbre_cuts = 2**(self.lvl_depth//2)
             else:
                 nbre_cuts = 1
-            print("DID CUTTING")
+            #print("DID CUTTING")
             # Disable feature vector normalization if required
             if self.ablation.normalize_features:
                 vector_processing = lambda f_map : tf.linalg.normalize(f_map, axis=-1)[0]
             else:
                 vector_processing = lambda f_map : f_map
-            print("DID NORMALIZATION")
+            #print("DID NORMALIZATION")
             # Preparation of the feature maps for to cost volumes
             curr_f_maps = vector_processing(tf.reshape(curr_f_maps, [b,h,w,nbre_cuts,-1]))
             curr_f_maps = tf.concat(tf.unstack(curr_f_maps, axis=3), axis=3)
-            print("DID CURR F _MAPS")
+            #print("DID CURR F _MAPS")
             if prev_f_maps is not None:
                 prev_f_maps = vector_processing(tf.reshape(prev_f_maps, [b,h,w,nbre_cuts,-1]))
                 prev_f_maps = tf.concat(tf.unstack(prev_f_maps, axis=3), axis=3)
-                print("DID PREV_F_MAPS")
+                #print("DID PREV_F_MAPS")
 
             # Manage level temporal memory
             if (not self.is_training) and prev_f_maps is None and prev_t_depth is None:
@@ -254,23 +254,18 @@ class DepthEstimatorLevel(ks.layers.Layer):
                 other_prev_l = tf.compat.v1.image.resize_bilinear(prev_l_est["other"], [h, w])
                 para_prev_l = tf.compat.v1.image.resize_bilinear(prev_l_est["parallax"], [h, w]) * 2.
                 depth_prev_l = tf.compat.v1.image.resize_bilinear(prev_l_est["depth"], [h, w])
-            print("DID DEPTH_PREV_L")
+            
             # Reinitialize temporal memory if sample is part of a new sequence
             # Note : sequences are supposed to be synchronized over the whole batch
-            print("PREV_T_DEPTH = ", prev_t_depth)
-            print("NEW_TRAJ[0]=",new_traj[0])
             if prev_t_depth is None or new_traj[0]:
-                print("I entered HERE")
                 prev_t_depth_tmp = tf.ones(self.shape[:3] + [1], dtype='float32') * 1000.
                 if not self.is_training:
                     self.prev_f_maps.assign(curr_f_maps)
                     self.depth_prev_t.assign(prev_t_depth_tmp)
                 curr_l_est = {"depth": depth_prev_l, "parallax": para_prev_l, "other": other_prev_l}
-                print("FINISHED DEPTH ESTIMATOR LEVEL seq 0")
                 return curr_l_est
             else:
                 with tf.name_scope("depth_preprocessor"):
-                    print("2_PREV_T_DEPTH = ", prev_t_depth)
                     para_prev_t = prev_d2para(prev_t_depth, rot, trans, camera)
 
                     cv, para_prev_t_reproj = get_parallax_sweeping_cv(curr_f_maps, prev_f_maps, para_prev_t,
@@ -296,10 +291,9 @@ class DepthEstimatorLevel(ks.layers.Layer):
                             print("Skipping time recurrence")
 
                         f_input = tf.concat(input_features, axis=3)
-                        print("DID INPUT PREPARATION")
+                        
                 with tf.name_scope("depth_estimator"):
                     prev_out = self.disp_refiner(f_input)
-                    print("DID DISP_REFINER")
                     para = prev_out[0][:, :, :, :1]
                     other = prev_out[0][:, :, :, 1:]
 
@@ -400,7 +394,7 @@ class SemanticEstimatorLevel(ks.layers.Layer):
             
             ## Currently no difference in the two cases, but in the future there will be a difference
             if prev_semantic_time is None or new_traj[0]:
-                print("SEMANTIC ENTERED HERE seq 0")
+                
                 with tf.name_scope("semantic_preprocessor"):
 
                     with tf.name_scope("semantic_input_prep"):
@@ -438,7 +432,7 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                         self.semantic_prev_time.assign(semantic)
                         
             else:
-                print("SEMANTIC ENTERED HERE 2")
+                
                 with tf.name_scope("semantic_preprocessor"):
                     
                     with tf.name_scope("input_prep"):
@@ -456,30 +450,17 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                         else:
                             print("Skipping SNCV")
 
-                        #if self.ablation.time_recurr:
-                            #print("Doing nothing fo time recurrence ")
-                            #input_features.append(tf.math.log(para_prev_t_reproj[:,:,:,4:5]*2**self.lvl_mul))
-                        #else:
-                            #print("Skipping time recurrence")
-
                         f_input = tf.concat(input_features, axis=3)
                         
 
                 with tf.name_scope("semantic_estimator"):
                     prev_out = self.semantic_refiner(f_input)
-
-                    #para = prev_out[0][:, :, :, :1]
                     semantic = prev_out[0][:, :, :, :self.classes]
                     other = prev_out[0][:, :, :, self.classes:]
                     
-
-                    #para_curr_l = tf.exp(tf.clip_by_value(para, -7., 7.))/2**self.lvl_mul
-                    #depth_prev_t = parallax2depth(para_curr_l, rot, trans, camera)
                     curr_s_est_lvl = {
                         "other": tf.identity(other),
                         "semantic": tf.identity(semantic),
-                        #"depth": tf.identity(depth_prev_t),
-                        #"parallax": tf.identity(para_curr_l),
                     }
 
                     if not self.is_training:
@@ -538,16 +519,14 @@ class DepthEstimatorPyramid(ks.layers.Layer):
                     local_rot = rot
                     local_trans = trans
                     new_traj = sample["new_traj"]
-                    print("DEPTH LEVEL = ",l)
+                    
                     if d_est_curr is None:
                         d_est_curr = [level(f_maps_curr, None, local_rot, local_trans, local_camera, new_traj,
                                             prev_f_maps=f_maps_prev, prev_t_depth=d_est_prev)]
-                        print("FINISHED DEPTH")
                     else:
                         d_est_curr.append(
                             level(f_maps_curr, d_est, local_rot, local_trans, local_camera, new_traj,
                                   prev_f_maps=f_maps_prev, prev_t_depth=d_est_prev))
-                        print("FINISHED DEPTH")
                     cnter -= 1.
 
                 d_est_seq.append(d_est_curr[::-1])
@@ -573,11 +552,10 @@ class SemanticEstimatorPyramid(ks.layers.Layer):
         for seq_i, (f_pyr_curr_time, sample) in enumerate(zip(f_maps_pyrs, traj_samples)):
             with tf.name_scope("SemanticEstimator_seq"):
                 print("Seq sample %i" % seq_i)
-                #print("DEPTH SAMPLE: ", sample['depth'])
+                
                 rot = sample['rot']
                 trans = sample['trans']
-                #depth = sample['depth']
-                #h,w = depth.get_shape().as_list()[1:3]
+                
 
                 cnter = float(len(self.levels))
                 s_est_curr_time = None
@@ -595,19 +573,7 @@ class SemanticEstimatorPyramid(ks.layers.Layer):
                     local_camera = camera.copy()
                     local_camera["f"] /= 2. ** cnter
                     local_camera["c"] /= 2. ** cnter
-                    #print("CNTER = ", cnter)
-                    #print("F = ", local_camera["f"])
-                    #print("C = ", local_camera["c"])
-                    '''
-                    h1 = tf.cast(h/ (2 ** cnter), tf.uint8)
-                    w1 = tf.cast(w/ (2 ** cnter), tf.uint8)
                     
-                    print("h= ", h1)
-                    print("w= ", w1)
-                    depth_lvl = tf.image.resize(depth, [h1,w1])
-                    print("LEVEL= ", l)
-                    print("DEPTH LEVEL: ", depth_lvl)
-                    '''
                     ## predicted semantics of previous level
                     if l != 0:
                         s_est_prev_lvl = s_est_curr_time[-1].copy()
@@ -719,24 +685,13 @@ class JointM4DepthSemantic(ks.models.Model):
 
             # Compute gradients
             print("COMPUTING GRADIENTS")
-            '''
-            f_trainable_vars = (self.encoder).trainable_variables
-            d_trainable_vars = (self.d_estimator).trainable_variables
-            s_trainable_vars = (self.s_estimator).trainable_variables
-            f_gradients = tape.gradient(loss, f_trainable_vars)
-            d_gradients = tape.gradient(loss_depth, d_trainable_vars)
-            s_gradients = tape.gradient(loss_semantic, s_trainable_vars)
-            '''
+            
             trainable_vars = self.trainable_variables
             gradients = tape.gradient(loss, trainable_vars)
 
             # Update weights
             print("APPLY GRADIENTS")
-            '''
-            self.optimizer.apply_gradients(zip(f_gradients, f_trainable_vars))
-            self.optimizer.apply_gradients(zip(d_gradients, d_trainable_vars))
-            self.optimizer.apply_gradients(zip(s_gradients, s_trainable_vars))
-            '''
+            
             self.optimizer.apply_gradients(zip(gradients, trainable_vars))
             # Update metrics (includes the metric that tracks the loss)
             #del tape
@@ -752,10 +707,8 @@ class JointM4DepthSemantic(ks.models.Model):
 
             tf.summary.image("depth_gt", tf.math.log(gt_d_clipped) / tf.math.log(max_d), step=self.step_counter)
             tf.summary.image("semantic_gt", gt_s, step=self.step_counter)
-            #print("PREDS= ", preds)
-            #print("LAST PREDS= ", preds[-1])
+            
             for i, d_est in enumerate(preds[0][-1]):
-                #print("EST= ", est)
                 s_est = preds[1][-1][i]
                 d_est_clipped = tf.clip_by_value(d_est["depth"], 1., max_d)
                 s_est = tf.expand_dims(tf.math.argmax(s_est["semantic"], -1), -1)
@@ -770,7 +723,7 @@ class JointM4DepthSemantic(ks.models.Model):
             est_d = tf.image.resize(preds[0][-1][0]["depth"], gt_d.get_shape()[1:3],
                                   method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
             s_pred = preds[1][-1][0]["semantic"]
-            #s_est = tf.expand_dims(tf.math.argmax(s_pred, -1), -1)
+            
             est_s = tf.image.resize(s_pred, gt_s.get_shape()[1:3],
                                   method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
             
@@ -779,17 +732,13 @@ class JointM4DepthSemantic(ks.models.Model):
             gt_d = tf.clip_by_value(gt_d, 0.00, max_d)
             est_d = tf.clip_by_value(est_d, 0.001, max_d)
             ## sparse categorical crossentropy loss
-            #print("GT = ", gt)
-            #print("PRED = ", est)
             est_s = tf.math.argmax(est_s, 3)
             
-            ## CHECK HERE ##
-            #print("COMPILED METRICS= ", self.compiled_metrics)
+            
             for metric in self.depth_metrics:
                 metric.update_state(gt_d, est_d)
             self.semantic_metrics[0].update_state(gt_s, est_s)
-            #self.compiled_metrics[0].update_state(gt_d, est_d)
-            #self.compiled_metrics[1].update_state(gt_s, est_s)
+            
             out_dict = {m.name: m.result() for m in self.metrics}
             out_dict["loss"] = loss
 
@@ -839,9 +788,6 @@ class JointM4DepthSemantic(ks.models.Model):
             est_d = tf.clip_by_value(est_d, 0.001, max_d)
 
             if not new_traj:
-                #self.compiled_metrics[0].update_state(gt_d, est_d)
-                #est_argmax = tf.math.argmax(est_s, 3)
-                #self.compiled_metrics[1].update_state(gt_s, est_argmax)
                 
                 for metric in self.depth_metrics:
                     metric.update_state(gt_d, est_d)
@@ -934,20 +880,10 @@ class JointM4DepthSemantic(ks.models.Model):
                     # Compute loss term
                     b, h, w = pred_semantic.get_shape().as_list()[:3]
                     nbre_points += h * w
-                    #print ("LOSS H PRED = ", h)
-                    #print ("LOSS W PRED = ", w)
-                    #b1, h1, w1 = gt_semantic.get_shape().as_list()[:3]
-                    #print ("LOSS H GT = ", h1)
-                    #print ("LOSS W GT = ", w1)
                     gt_resized = tf.image.resize(gt_semantic, [h, w], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-                    #print("GT = ", gt_resized)
-                    #print("PREDICTION = ", pred_semantic)
+                    
                     loss_term = scce(gt_resized, pred_semantic)
-                    #print("LOSS TERM: ", loss_term)
                     
-                    #loss_term = scce(gt_resized, pred_semantic).numpy()
-                    
-                    #loss_term = tf.reduce_mean(t_resized - pred_depth)
                     loss += loss_term / (float(len(gts) - 1))
                     
             return loss
@@ -959,6 +895,5 @@ class JointM4DepthSemantic(ks.models.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        #return [self.depth_metrics[0], self.depth_metrics[1], self.depth_metrics[2], self.depth_metrics[3], self.depth_metrics[4], self.depth_metrics[5], self.depth_metrics[6],
-                #self.semantic_metrics[0]]
-        return [self.semantic_metrics[0]]
+        return [self.depth_metrics[0], self.depth_metrics[1], self.depth_metrics[2], self.depth_metrics[3], self.depth_metrics[4], self.depth_metrics[5], self.depth_metrics[6], self.semantic_metrics[0]]
+        #return [self.semantic_metrics[0]]

@@ -8,6 +8,7 @@ class DataLoaderMidAir(DataLoaderGeneric):
         super(DataLoaderMidAir, self).__init__('midair')
 
         self.in_size = [1024, 1024]
+        self.in_size_semantic = [384,384]
         #self.class_count = 14
         self.class_count = 9
         self.depth_type = "map"
@@ -63,7 +64,7 @@ class DataLoaderMidAir(DataLoaderGeneric):
         if 'semantic' in data_sample:
            file = tf.io.read_file(tf.strings.join([self.db_path, data_sample['semantic']], separator='/'))
            image = tf.image.decode_png(file)
-           semantic = tf.reshape(image[:,:,0], self.in_size + [1])
+           semantic = tf.reshape(image[:,:,0], self.in_size_semantic + [1])
            out_data['semantic'] = tf.image.resize(semantic, self.intermediate_size, method = "nearest")
         
         # Load depth data only if they are available
