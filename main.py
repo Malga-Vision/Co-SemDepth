@@ -172,6 +172,19 @@ if __name__ == '__main__':
         is_first_run = True
         
         class_index = chosen_dataloader.class_index
+        
+        img_out_dir = "results/images"
+        sem_gt_out_dir = "results/sem_gt"
+        sem_est_out_dir = "results/sem_est"
+        depth_est_out_dir = "results/depth_est"
+        depth_gt_out_dir = "results/depth_gt"
+        
+        os.makedirs(img_out_dir, exist_ok=True)
+        os.makedirs(sem_gt_out_dir, exist_ok=True)
+        os.makedirs(sem_est_out_dir, exist_ok=True)
+        os.makedirs(depth_gt_out_dir, exist_ok=True)
+        os.makedirs(depth_est_out_dir, exist_ok=True)
+        
         start = time.time()
         # Do what you want with the outputs
         for i, sample in enumerate(data):
@@ -204,9 +217,9 @@ if __name__ == '__main__':
             d_est_rgb = np.squeeze(d_est, axis=2).astype(np.uint8)
             d_gt_rgb = np.squeeze(d_gt, axis=2).astype(np.uint8)
             im = Image.fromarray(d_est_rgb)
-            im.save("/media/DATA_4TB/Yara/results/depth_estimation/depth_"+str(i)+".png")
+            im.save(depth_est_out_dir + "/depth_"+str(i)+".png")
             im = Image.fromarray(d_gt_rgb)
-            im.save("/media/DATA_4TB/Yara/results/gt_depth/depth_"+str(i)+".png")
+            im.save(depth_gt_out_dir + "/depth_"+str(i)+".png")
             
             
             seg_est = np.expand_dims(seg_est, axis = 2)
@@ -224,7 +237,7 @@ if __name__ == '__main__':
             img_seg = np.append(img_seg,x3, axis = 2)
             
             im = Image.fromarray(img_seg.astype(np.uint8))
-            im.save("/media/DATA_4TB/Yara/results/seg_estimation/sem_"+str(i)+".png")
+            im.save(sem_est_out_dir + "/sem_"+str(i)+".png")
             
             x1 = np.copy(seg_gt)
             x2 = np.copy(seg_gt)
@@ -239,11 +252,11 @@ if __name__ == '__main__':
             img_seg = np.append(img_seg,x3, axis = 2)
             
             im = Image.fromarray(img_seg.astype(np.uint8))
-            im.save("/media/DATA_4TB/Yara/results/gt_sem/sem_"+str(i)+".png")
+            im.save(sem_gt_out_dir + "/sem_"+str(i)+".png")
             
             i_rgb_rgb =  ( i_rgb  * 255.0).astype(np.uint8)
             im = Image.fromarray(i_rgb_rgb)
-            im.save("/media/DATA_4TB/Yara/results/images/img_"+str(i)+".png")
+            im.save(img_out_dir + "/img_"+str(i)+".png")
             
 
         end = time.time()

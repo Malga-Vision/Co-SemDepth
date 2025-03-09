@@ -2,7 +2,7 @@ import json
 import os.path
 
 from dataloaders import DataloaderParameters
-from joint_m4depth_network import M4depthAblationParameters
+from cosemdepth_network import M4depthAblationParameters
 
 
 class M4DepthOptions:

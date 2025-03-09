@@ -55,7 +55,11 @@ bash  scripts/2-evaluate.sh midair path/to/weights/location
 
 ### Processing outputs
 
-## Prediction on your own images
+## Prediction and visualizing the output
+
+```shell
+python main.py --mode=predict --dataset="midair" --arch_depth=5 --ckpt_dir="weights/midair/" --records="data/midair/test_data/"
+```
 
 ## Baseline methods performance reproduction
 

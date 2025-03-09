@@ -9,19 +9,17 @@ class DataLoaderMidAir(DataLoaderGeneric):
 
         self.in_size = [1024, 1024]
         self.in_size_semantic = [384,384]
-        #self.class_count = 14
-        self.class_count = 9
+        #self.in_size_semantic = [1024,1024]
+        self.class_count = 7
         self.depth_type = "map"
         self.class_index = {
         0: [(127, 175, 230), 'Sky'],
         1: [(75, 163, 185),'water plane'],
         2: [(50, 128, 0),  'Trees'],
         3: [(53, 94, 59),  'land'],
-        4: [(237, 125, 49), 'vehicle'],   
-        5: [(70, 70, 70),   'boulders'],
-        6: [(128, 64, 128),  'Road'],
-        7: [(64, 64, 128),  'man-made construction'],
-        8: [(128, 64, 64),  'others']
+        4: [(70, 70, 70),   'Rocks'],   
+        5: [(128, 64, 128),  'Road'],
+        6: [(128, 64, 64),  'others']
         }
         
 

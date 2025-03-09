@@ -138,7 +138,7 @@ class SemanticRefiner(ks.layers.Layer):
     # Sub-network in charge of refining an input parallax estimate
     # (name to be kept to keep backward compatibility with existing trained weights)
 
-    def __init__(self, regularizer_weight=0.0004, num_classes = 14):
+    def __init__(self, regularizer_weight=0.0004, num_classes = 7):
         super(SemanticRefiner, self).__init__()
 
         init = ks.initializers.HeNormal()
@@ -151,7 +151,7 @@ class SemanticRefiner(ks.layers.Layer):
             kernel_initializer=init, kernel_regularizer=reg)
             for nbre_filters in conv_channels
         ]
-        #conv_channels = [64, 32, 16, 5]
+        
         conv_channels = [64, 32, 16, self.classes+4]
         self.est_s_conv_layers = [ks.layers.Conv2D(
             nbre_filters, 3, strides=(1, 1), padding='same',
@@ -168,7 +168,7 @@ class SemanticRefiner(ks.layers.Layer):
             prev_out = conv(prev_out)
             prev_out = tf.nn.leaky_relu(prev_out, 0.1)
 
-        prev_outs = [prev_out, prev_out] ## Why 2?
+        prev_outs = [prev_out, prev_out] 
 
         for i, convs in enumerate(zip(self.est_s_conv_layers)):
 
@@ -181,7 +181,6 @@ class SemanticRefiner(ks.layers.Layer):
                     outs1 = tf.nn.softmax(prev_outs[j][:,:,:,:self.classes])
                     outs2 = prev_outs[j][:,:,:,self.classes:]
                     prev_outs[j] = tf.concat([outs1, outs2], axis = 3)
-                ### We should apply softmax activation on the last convolutional output (only till channel 13)
 
         return prev_outs # tf.concat(prev_outs, axis=-1)
 
@@ -224,21 +223,21 @@ class DepthEstimatorLevel(ks.layers.Layer):
                 nbre_cuts = 2**(self.lvl_depth//2)
             else:
                 nbre_cuts = 1
-            #print("DID CUTTING")
+            
             # Disable feature vector normalization if required
             if self.ablation.normalize_features:
                 vector_processing = lambda f_map : tf.linalg.normalize(f_map, axis=-1)[0]
             else:
                 vector_processing = lambda f_map : f_map
-            #print("DID NORMALIZATION")
+            
             # Preparation of the feature maps for to cost volumes
             curr_f_maps = vector_processing(tf.reshape(curr_f_maps, [b,h,w,nbre_cuts,-1]))
             curr_f_maps = tf.concat(tf.unstack(curr_f_maps, axis=3), axis=3)
-            #print("DID CURR F _MAPS")
+            
             if prev_f_maps is not None:
                 prev_f_maps = vector_processing(tf.reshape(prev_f_maps, [b,h,w,nbre_cuts,-1]))
                 prev_f_maps = tf.concat(tf.unstack(prev_f_maps, axis=3), axis=3)
-                #print("DID PREV_F_MAPS")
+                
 
             # Manage level temporal memory
             if (not self.is_training) and prev_f_maps is None and prev_t_depth is None:
@@ -257,15 +256,19 @@ class DepthEstimatorLevel(ks.layers.Layer):
             
             # Reinitialize temporal memory if sample is part of a new sequence
             # Note : sequences are supposed to be synchronized over the whole batch
+            
             if prev_t_depth is None or new_traj[0]:
+                
                 prev_t_depth_tmp = tf.ones(self.shape[:3] + [1], dtype='float32') * 1000.
                 if not self.is_training:
                     self.prev_f_maps.assign(curr_f_maps)
                     self.depth_prev_t.assign(prev_t_depth_tmp)
                 curr_l_est = {"depth": depth_prev_l, "parallax": para_prev_l, "other": other_prev_l}
+                
                 return curr_l_est
             else:
                 with tf.name_scope("depth_preprocessor"):
+                    
                     para_prev_t = prev_d2para(prev_t_depth, rot, trans, camera)
 
                     cv, para_prev_t_reproj = get_parallax_sweeping_cv(curr_f_maps, prev_f_maps, para_prev_t,
@@ -294,6 +297,7 @@ class DepthEstimatorLevel(ks.layers.Layer):
                         
                 with tf.name_scope("depth_estimator"):
                     prev_out = self.disp_refiner(f_input)
+                    
                     para = prev_out[0][:, :, :, :1]
                     other = prev_out[0][:, :, :, 1:]
 
@@ -304,7 +308,7 @@ class DepthEstimatorLevel(ks.layers.Layer):
                         "depth": tf.identity(depth_prev_t),
                         "parallax": tf.identity(para_curr_l),
                     }
-                    print("FINISHED DEPTH ESTIMATOR LEVEL")
+                    
 
                     if not self.is_training:
                         self.prev_f_maps.assign(curr_f_maps)
@@ -349,16 +353,18 @@ class SemanticEstimatorLevel(ks.layers.Layer):
 
     @tf.function
     def call(self, curr_f_maps_lvl, prev_s_est_lvl, rot, trans, camera, new_traj, prev_f_maps_time=None, prev_semantic_time=None):
-        #print("PREV_SEMANTIC_TIME= ", prev_semantic_time)
+        
         with tf.name_scope("SemanticEstimator_lvl"):
             b, h, w, c = self.shape
 
             # Disable feature vector subdivision if required
+            '''
             if self.ablation.subdivide_features:
                 nbre_cuts = 2**(self.lvl_depth//2) ## K
             else:
                 nbre_cuts = 1
-
+            '''
+            nbre_cuts = 1
             # Disable feature vector normalization if required
             if self.ablation.normalize_features:
                 vector_processing = lambda f_map : tf.linalg.normalize(f_map, axis=-1)[0]
@@ -398,6 +404,8 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                 with tf.name_scope("semantic_preprocessor"):
 
                     with tf.name_scope("semantic_input_prep"):
+                        #max_d = 100.0
+                        #input_features = [tf.clip_by_value(curr_depth_lvl, 0.001, max_d), semantic_prev_lvl]
                         input_features = [semantic_prev_lvl]
                         
 
@@ -405,14 +413,16 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                             input_features.append(other_prev_lvl)
                         else:
                             print("Ignoring level memory")
-
+                        '''
                         if self.ablation.SNCV:
                             autocorr = cost_volume(curr_f_maps_lvl, curr_f_maps_lvl, 3, nbre_cuts=nbre_cuts)
                             input_features.append(autocorr)
                         else:
+                            input_features.append(curr_f_maps_lvl)
                             print("Skipping SNCV")
-
-
+                        '''
+                        input_features.append(curr_f_maps_lvl)
+                        
                         f_input = tf.concat(input_features, axis=3)
                         
 
@@ -436,6 +446,8 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                 with tf.name_scope("semantic_preprocessor"):
                     
                     with tf.name_scope("input_prep"):
+                        #max_d = 100.0
+                        #input_features = [tf.clip_by_value(curr_depth_lvl, 0.001, max_d), semantic_prev_lvl]
                         input_features = [semantic_prev_lvl]
                         
 
@@ -443,12 +455,16 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                             input_features.append(other_prev_lvl)
                         else:
                             print("Ignoring level memory")
-
+                        '''
                         if self.ablation.SNCV:
                             autocorr = cost_volume(curr_f_maps_lvl, curr_f_maps_lvl, 3, nbre_cuts=nbre_cuts)
                             input_features.append(autocorr)
                         else:
+                            input_features.append(curr_f_maps_lvl)
                             print("Skipping SNCV")
+                        '''
+                        input_features.append(curr_f_maps_lvl)
+                        
 
                         f_input = tf.concat(input_features, axis=3)
                         
@@ -461,6 +477,7 @@ class SemanticEstimatorLevel(ks.layers.Layer):
                     curr_s_est_lvl = {
                         "other": tf.identity(other),
                         "semantic": tf.identity(semantic),
+                        
                     }
 
                     if not self.is_training:
@@ -483,7 +500,7 @@ class DepthEstimatorPyramid(ks.layers.Layer):
             DepthEstimatorLevel(settings, i+1, regularizer_weight=regularizer_weight) for i in range(settings["nbre_lvls"])
         ]
         self.is_training = settings["is_training"]
-        self.is_unsupervised = False #settings["unsupervised"]
+        self.is_unsupervised = False 
 
     @tf.function
     def call(self, f_maps_pyrs, traj_samples, camera, training=False):
@@ -523,10 +540,12 @@ class DepthEstimatorPyramid(ks.layers.Layer):
                     if d_est_curr is None:
                         d_est_curr = [level(f_maps_curr, None, local_rot, local_trans, local_camera, new_traj,
                                             prev_f_maps=f_maps_prev, prev_t_depth=d_est_prev)]
+                        
                     else:
                         d_est_curr.append(
                             level(f_maps_curr, d_est, local_rot, local_trans, local_camera, new_traj,
                                   prev_f_maps=f_maps_prev, prev_t_depth=d_est_prev))
+                        
                     cnter -= 1.
 
                 d_est_seq.append(d_est_curr[::-1])
@@ -574,6 +593,19 @@ class SemanticEstimatorPyramid(ks.layers.Layer):
                     local_camera["f"] /= 2. ** cnter
                     local_camera["c"] /= 2. ** cnter
                     
+                    '''
+                    h1 = tf.cast(h/ (2 ** cnter), tf.uint8)
+                    w1 = tf.cast(w/ (2 ** cnter), tf.uint8)
+                    
+                    print("h= ", h1)
+                    print("w= ", w1)
+                    depth_lvl = tf.image.resize(depth, [h1,w1])
+                    print("LEVEL= ", l)
+                    print("DEPTH LEVEL: ", depth_lvl)
+                    '''
+                    #depth_lvl = d_maps_curr_lvl["depth"]
+                    #print("LEVEL= ", l)
+                    #print("SHAPE DEPTH LVL: ", depth_lvl.get_shape())
                     ## predicted semantics of previous level
                     if l != 0:
                         s_est_prev_lvl = s_est_curr_time[-1].copy()
@@ -607,7 +639,7 @@ class JointM4DepthSemantic(ks.models.Model):
             self.ablation_settings = M4depthAblationParameters()
         else:
             self.ablation_settings = ablation_settings
-        print("### INITIALIZING THE MODELLL ###")
+        
         self.model_settings = {
             "nbre_lvls": nbre_levels,
             "is_training": is_training,
@@ -631,7 +663,7 @@ class JointM4DepthSemantic(ks.models.Model):
                                RootMeanSquaredLogError(),
                                ThresholdRelError(1), ThresholdRelError(2), ThresholdRelError(3)]
         self.semantic_metrics= [tf.keras.metrics.MeanIoU(num_classes = num_classes)]
-        #self.semantic_metrics= [tf.keras.metrics.IoU(num_classes = num_classes, target_class_ids=[0])]
+        
         self.summaries = []
 
     @tf.function
@@ -644,11 +676,11 @@ class JointM4DepthSemantic(ks.models.Model):
             f_maps_pyrs = []
             for sample in traj_samples:
                 f_maps_pyrs.append(self.encoder(sample['RGB_im']))
-            print("GOT FEATURES")
+            
             d_maps_pyrs = self.d_estimator(f_maps_pyrs, traj_samples, camera, training)
-            print("GOT DEPTH")
+            
             s_maps_pyrs = self.s_estimator(f_maps_pyrs, traj_samples, camera, training)
-            print("GOT SEMANTICS")
+            
             
             if training:
                 return [d_maps_pyrs, s_maps_pyrs]
@@ -657,7 +689,7 @@ class JointM4DepthSemantic(ks.models.Model):
                 
                 return {"depth": tf.image.resize(d_maps_pyrs[-1][0]["depth"], [h, w], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR),
                         "semantic": tf.image.resize(s_maps_pyrs[-1][0]["semantic"], [h, w], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)}
-
+                
     @tf.function
     def train_step(self, data):
         with tf.name_scope("train_scope"):
@@ -709,6 +741,7 @@ class JointM4DepthSemantic(ks.models.Model):
             tf.summary.image("semantic_gt", gt_s, step=self.step_counter)
             
             for i, d_est in enumerate(preds[0][-1]):
+                
                 s_est = preds[1][-1][i]
                 d_est_clipped = tf.clip_by_value(d_est["depth"], 1., max_d)
                 s_est = tf.expand_dims(tf.math.argmax(s_est["semantic"], -1), -1)
@@ -722,6 +755,7 @@ class JointM4DepthSemantic(ks.models.Model):
             gt_s = gts[-1]["semantic"]
             est_d = tf.image.resize(preds[0][-1][0]["depth"], gt_d.get_shape()[1:3],
                                   method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+            
             s_pred = preds[1][-1][0]["semantic"]
             
             est_s = tf.image.resize(s_pred, gt_s.get_shape()[1:3],
@@ -732,8 +766,8 @@ class JointM4DepthSemantic(ks.models.Model):
             gt_d = tf.clip_by_value(gt_d, 0.00, max_d)
             est_d = tf.clip_by_value(est_d, 0.001, max_d)
             ## sparse categorical crossentropy loss
-            est_s = tf.math.argmax(est_s, 3)
             
+            est_s = tf.math.argmax(est_s, 3)
             
             for metric in self.depth_metrics:
                 metric.update_state(gt_d, est_d)
@@ -786,7 +820,7 @@ class JointM4DepthSemantic(ks.models.Model):
             max_d = 80.
             gt_d = tf.clip_by_value(gt_d, 0.0, max_d) 
             est_d = tf.clip_by_value(est_d, 0.001, max_d)
-
+            
             if not new_traj:
                 
                 for metric in self.depth_metrics:
@@ -800,7 +834,6 @@ class JointM4DepthSemantic(ks.models.Model):
 
     @tf.function
     def predict_step(self, data):
-        print("ENTERED PREDICT")
         # expects one sequence element at a time (batch dim is required and is free to be set)"
         preds = self([[data], data["camera"]], training=False)
 
@@ -855,7 +888,7 @@ class JointM4DepthSemantic(ks.models.Model):
                         new_mask = tf.cast(tf.greater(tf.reduce_sum(mask, axis=[2, 4]), 0.), tf.float32)
                         l1_loss_term = (0.64 / (2. ** (i - 1))) * masked_reduce_mean(tf.abs(gt_resized - pred_depth),
                                                                                      new_mask)
-                        # l1_loss_term = (0.64 / (2. ** (i - 1))) * tf.reduce_sum(tf.abs(gt_resized - pred_depth)* new_mask)enable_validation
+                        
                     else:
                         gt_resized = tf.image.resize(gt_preprocessed, [h, w])
                         l1_loss_term = (0.64 / (2. ** (i - 1))) * tf.reduce_mean(tf.abs(gt_resized - pred_depth))
@@ -880,6 +913,7 @@ class JointM4DepthSemantic(ks.models.Model):
                     # Compute loss term
                     b, h, w = pred_semantic.get_shape().as_list()[:3]
                     nbre_points += h * w
+                    
                     gt_resized = tf.image.resize(gt_semantic, [h, w], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
                     
                     loss_term = scce(gt_resized, pred_semantic)
@@ -895,5 +929,5 @@ class JointM4DepthSemantic(ks.models.Model):
         # or at the start of `evaluate()`.
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
-        return [self.depth_metrics[0], self.depth_metrics[1], self.depth_metrics[2], self.depth_metrics[3], self.depth_metrics[4], self.depth_metrics[5], self.depth_metrics[6], self.semantic_metrics[0]]
-        #return [self.semantic_metrics[0]]
+        return [self.depth_metrics[0], self.depth_metrics[1], self.depth_metrics[2], self.depth_metrics[3], self.depth_metrics[4], self.depth_metrics[5], self.depth_metrics[6],
+                self.semantic_metrics[0]]
