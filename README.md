@@ -51,19 +51,19 @@ To evaluate on MidAir:
 ```shell
 bash  scripts/2-evaluate.sh midair path/to/weights/location
 ```
-### Other operations
-
-### Processing outputs
 
 ## Prediction and visualizing the output
+For prediction and saving the output depth and semantic segmentation maps run the following:
 
 ```shell
 python main.py --mode=predict --dataset="midair" --arch_depth=5 --ckpt_dir="weights/midair/" --records="data/midair/test_data/"
 ```
-
+## Training and Evaluation on your own dataset
+In this case, you need to write the dataloader for your own dataset similar to `dataloaders/midair.py`. You also need to generate the data files by writing a data generator script similar to `scripts/midair-split-generator.py`. For depth training and prediction, your dataset should have per-frame camera location information to generate the data files.
 ## Baseline methods performance reproduction
+Please refer to this [repository](https://github.com/Malga-Vision/M4Semantic)
 
-## Training on MidAir+TopAir
+## [Extra] Training on MidAir+TopAir
 TopAir dataset can be downloaded from [here](https://huggingface.co/datasets/yaraalaa0/TopAir). Then you need to specify its path in the file [datasets_location.json](https://github.com/Malga-Vision/Co-SemDepth/blob/main/datasets_location.json)
 
 To train on MidAir and TopAir datasets together, run:
