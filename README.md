@@ -52,6 +52,8 @@ To evaluate on MidAir:
 bash  scripts/2-evaluate.sh midair path/to/weights/location
 ```
 
+Please notice that, because of differences in the environments, you may need to train the network from scratch in your conda evnironment to be able to obtain the same results reported in the paper
+
 ## Prediction and visualizing the output
 For prediction and saving the output depth and semantic segmentation maps run the following:
 
