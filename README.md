@@ -6,7 +6,18 @@ Co-SemDepth is a lightweight joint deep architecture for monocular depth estimat
 
 Please refer to these repositories for the single [M4Depth](https://github.com/michael-fonder/M4Depth) and [M4Semantic](https://github.com/Malga-Vision/M4Semantic) architectures.
 ## Citation
-
+If you use this code, please cite our paper:
+```
+@misc{alaaeldin2025cosemdepthfastjointsemantic,
+      title={Co-SemDepth: Fast Joint Semantic Segmentation and Depth Estimation on Aerial Images}, 
+      author={Yara AlaaEldin and Francesca Odone},
+      year={2025},
+      eprint={2503.17982},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2503.17982}, 
+}
+```
 ## Dependencies
 Starting from a fresh Anaconda environment with python=3.8, you need first to install tensorflow 2.7:
 ```shell
