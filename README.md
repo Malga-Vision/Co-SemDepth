@@ -96,3 +96,4 @@ python joint_train.py --mode=train --seq_len=4 --db_seq_len=4 --arch_depth=5 --c
 ```
 ## License
 
+Our code is licensed under the AGPLv3 - See the [LICENSE](LICENSE) file for details.
