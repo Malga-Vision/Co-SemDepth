@@ -1,6 +1,6 @@
 """
 ----------------------------------------------------------------------------------------
-Copyright (c) 2022 - Michael Fonder, University of Liège (ULiège), Belgium.
+Copyright (c) 2025 - Yara AlaaEldin, University of Genova, Italy.
 
 This program is free software: you can redistribute it and/or modify it under the terms
 of the GNU Affero General Public License as published by the Free Software Foundation,
