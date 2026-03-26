@@ -1,11 +1,3 @@
-'''
-Note: This script requires two specific libraries:
-    * h5py for opening Mid-Air data records
-    * pyquaternion for quaternion operations
-Both can be installed with pip:
-$ pip install pyquaternion h5py
-'''
-
 import os
 import argparse
 import h5py
